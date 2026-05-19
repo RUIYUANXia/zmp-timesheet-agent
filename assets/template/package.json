@@ -1,0 +1,15 @@
+{
+  "name": "zmp-timesheet-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local UI and browser agent for ZMP timesheet filling.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start-job": "node scripts/start-job.js",
+    "check": "node --check server.js && node --check agent/zmpAgent.js"
+  },
+  "dependencies": {
+    "playwright": "^1.53.0"
+  }
+}
