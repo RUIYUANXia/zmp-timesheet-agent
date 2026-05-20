@@ -103,7 +103,7 @@ async function handleApi(req, res) {
 
   if (req.method === "POST" && url.pathname === "/api/plan") {
     const config = await readBody(req);
-    sendJson(res, 200, buildPlan(config));
+    sendJson(res, 200, await buildPlan(config));
     return;
   }
 

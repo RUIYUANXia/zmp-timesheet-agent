@@ -4,7 +4,7 @@ const fs = require("fs");
 const BASE_URL = process.env.ZMP_AGENT_URL || "http://127.0.0.1:4173";
 
 function usage() {
-  console.error("Usage: node scripts/start-job.js (--config <config.json> | --json '<json>' | --stdin)");
+  console.error("Usage: node scripts/start-job.js (--config <config.json> | --json '<json>' | --stdin | --text '<request>')");
   process.exit(2);
 }
 
@@ -23,6 +23,12 @@ function parseArgs(argv) {
 
   if (argv.includes("--stdin")) {
     return { mode: "stdin" };
+  }
+
+  const textIndex = argv.indexOf("--text");
+  if (textIndex !== -1) {
+    if (!argv[textIndex + 1]) usage();
+    return { mode: "text", value: argv[textIndex + 1] };
   }
 
   usage();
@@ -46,6 +52,9 @@ async function readConfig(input) {
   }
   if (input.mode === "json") {
     return JSON.parse(input.value);
+  }
+  if (input.mode === "text") {
+    return { requestText: input.value };
   }
   return JSON.parse(await readStdin());
 }

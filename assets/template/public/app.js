@@ -58,6 +58,7 @@ function renderCalendar() {
 
 function collectConfig() {
   return {
+    requestText: document.querySelector("#requestText").value.trim(),
     selectedDates: [...selected].sort(),
     hours: Number(document.querySelector("#hours").value || 8),
     category: document.querySelector("#category").value,
@@ -108,8 +109,8 @@ async function pollJob(id) {
 
 async function start() {
   const config = collectConfig();
-  if (!config.selectedDates.length) {
-    show("请先选择至少一个日期。");
+  if (!config.selectedDates.length && !config.requestText) {
+    show("请先选择至少一个日期，或输入“帮我填写本月工时”。");
     return;
   }
 

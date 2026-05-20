@@ -27,6 +27,8 @@ npm start
 - 工作说明
 - 是否出差
 
+也可以直接使用自然语言日期请求。比如在前端输入 `帮我填写本月工时`，或通过命令行传入 `--text`。工具会按提交请求当天统计本月截至当天的中国工作日，并通过节假日 API 获取法定休息日和调休工作日。首次查询某一年会缓存结果，后续优先使用缓存；如果 API 和缓存都不可用，会退回到仅按周六周日判断，并在计划备注里提示。
+
 配置示例：
 
 ```json
@@ -45,6 +47,30 @@ npm start
 
 ```bash
 npm run start-job -- --json '{"selectedDates":["2026-05-06"],"hours":8,"category":"升级/测试/业务操作","workDescription":"业务操作","isTravel":false,"submitAfterEachSheet":true,"dryRun":false}'
+```
+
+自然语言请求示例：
+
+```bash
+npm run start-job -- --text '帮我填写本月工时'
+```
+
+节假日 API 默认使用 `https://api.jiejiariapi.com/v1/holidays/{year}`。如需配置 API Key，可设置环境变量：
+
+```bash
+export JIEJIARI_API_KEY='你的 API KEY'
+```
+
+可选环境变量：
+
+- `JIEJIARI_API_BASE_URL`：自定义节假日 API 地址。
+- `ZMP_HOLIDAY_CACHE_DIR`：自定义节假日缓存目录，默认是项目内 `.cache/holiday-cache`。
+- `ZMP_DISABLE_HOLIDAY_API=1`：禁用 API，只使用缓存或周末兜底。
+
+验证节假日 API 可用性：
+
+```bash
+npm run verify-holiday-api -- --year 2026 --today 2026-05-20
 ```
 
 ## 当前流程

@@ -1,6 +1,6 @@
 ---
 name: zmp-timesheet-agent
-description: Build, install, modify, troubleshoot, or operate a local browser automation agent for ZMP工时填报 / 项目任务管理. Use when the user asks for automatic ZMP timesheet filling by either front-end date selection or conversational input, Playwright automation for https://zmp.iwhalecloud.com/newZmp#/, 飞连一键登录 handling, 工时单日期范围 splitting, task-hour entry, 是否出差, per-date save, or auto-submit behavior.
+description: Build, install, modify, troubleshoot, or operate a local browser automation agent for ZMP工时填报 / 项目任务管理. Use when the user asks for automatic ZMP timesheet filling by front-end date selection or conversational input, including natural-language requests like “帮我填写本月工时” that require China workday/holiday API lookup, Playwright automation for https://zmp.iwhalecloud.com/newZmp#/, 飞连一键登录 handling, 工时单日期范围 splitting, task-hour entry, 是否出差, per-date save, or auto-submit behavior.
 ---
 
 # ZMP Timesheet Agent
@@ -14,16 +14,20 @@ Copy `assets/template/` into the user's chosen workspace when creating a new too
 - `server.js`: local HTTP server and job runner.
 - `public/`: date-selection UI, execution logs, dry-run mode, and settings.
 - `agent/zmpAgent.js`: Playwright automation for ZMP.
-- `scripts/start-job.js`: conversational-mode helper for starting a job from JSON.
+- `agent/workCalendar.js`: China workday resolver for “本月工时” using the holiday API plus local cache.
+- `scripts/start-job.js`: conversational-mode helper for starting a job from JSON or `--text`.
+- `scripts/verify-holiday-api.js`: API/plan smoke test for holiday data.
 - `package.json`: Node dependencies and scripts.
 
-Do not copy `node_modules`. Run `npm install` in the target workspace after copying.
+Do not copy `node_modules` or `.cache`. Run `npm install` in the target workspace after copying.
 
 ## Two Operating Modes
 
 ### Front-End Mode
 
 Use this when the user wants a page to select dates. Start the server with `npm start`, open `http://127.0.0.1:4173`, then let the user choose dates, 工时类型, 工时, 工作说明, and 是否出差.
+
+The front end also accepts a natural-language instruction such as `帮我填写本月工时`. If no manual dates are selected, the app resolves the current month-to-date workdays before planning or filling.
 
 ### Conversational Mode
 
@@ -32,6 +36,7 @@ Use this when the user says something like “帮我填报 5 月 6 到 9 号工�
 Ask only for missing information:
 
 - 日期：explicit dates or a date range. If the user gives a range, ask whether to include every date in the range or exclude any rest days. Do not infer weekends.
+- 本月工时：if the user says “帮我填写本月工时” or equivalent, set `requestText` instead of manually enumerating dates. The tool resolves current month-to-date China workdays from the holiday API and then uses the normal work-order range split.
 - 每天工时：default to `8` only if the user accepts the default.
 - 工时类型：must be one of the ZMP labels, such as `升级/测试/业务操作`.
 - 工作说明：ask if not provided.
@@ -57,7 +62,38 @@ If the server is running, pass the confirmed JSON directly:
 npm run start-job -- --json '{"selectedDates":["2026-05-06"],"hours":8,"category":"升级/测试/业务操作","workDescription":"业务操作","isTravel":false,"submitAfterEachSheet":true,"dryRun":false}'
 ```
 
+For current-month workdays, pass natural language directly:
+
+```bash
+npm run start-job -- --text '帮我填写本月工时'
+```
+
 If the server is not running, start it with `npm start` first.
+
+## Holiday API
+
+For “本月工时”, resolve dates with `https://api.jiejiariapi.com/v1/holidays/{year}`. Treat API entries as authoritative:
+
+- `isOffDay: true`: rest day; exclude it.
+- `isOffDay: false`: adjusted workday; include it even if it is Saturday or Sunday.
+- missing API entry: use the normal weekday rule; Monday-Friday are workdays, Saturday-Sunday are rest days.
+
+Cache yearly API responses in `.cache/holiday-cache` by default. If the API fails, use cache when available. If both API and cache are unavailable, fall back to weekday-only logic and include the warning in the generated plan.
+
+Support these environment variables:
+
+- `JIEJIARI_API_KEY`: optional API key, sent as `Authorization: Bearer ...`.
+- `JIEJIARI_API_BASE_URL`: alternate API base URL.
+- `ZMP_HOLIDAY_CACHE_DIR`: custom holiday cache directory.
+- `ZMP_DISABLE_HOLIDAY_API=1`: skip network and use cache or weekday fallback.
+
+Before relying on current-month natural-language filling in a new environment, run:
+
+```bash
+npm run verify-holiday-api -- --year 2026 --today 2026-05-20
+```
+
+Expected 2026-05-20 sample dates are `2026-05-06` through `2026-05-09`, `2026-05-11` through `2026-05-15`, and `2026-05-18` through `2026-05-20`.
 
 ## Expected Flow
 
@@ -96,6 +132,7 @@ Prefer these selectors and behaviors before inventing new ones:
 ## Important Semantics
 
 - Do not auto-filter weekends. The UI may gray weekends, but selected dates are authoritative because China holiday makeup days can fall on weekends.
+- For natural-language “本月工时”, do not hardcode yearly holidays. Use `agent/workCalendar.js`, the holiday API, and cache/fallback semantics above.
 - Existing-date detection must be scoped to the `任务工时` table only. Do not scan the whole page, because work-order due dates can cause false `已存在` skips.
 - Save after every date entry, then add the next date.
 - `自动提交` means submit the current work order only after its last newly saved timesheet row.

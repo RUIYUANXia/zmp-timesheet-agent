@@ -1,4 +1,4 @@
 interface:
   display_name: "ZMP Timesheet Agent"
-  short_description: "Build and tune the ZMP timesheet automation agent."
-  default_prompt: "Use $zmp-timesheet-agent to create or adjust the ZMP automatic timesheet filling tool."
+  short_description: "Build and tune ZMP timesheet automation."
+  default_prompt: "Use $zmp-timesheet-agent to create or adjust the ZMP automatic timesheet filling tool, including current-month workday filling."

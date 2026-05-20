@@ -1,5 +1,6 @@
 const os = require("os");
 const path = require("path");
+const { resolveDatesFromRequest } = require("./workCalendar");
 
 const ZMP_URL = "https://zmp.iwhalecloud.com/newZmp#/";
 const DEFAULT_CATEGORY = "升级/测试/业务操作";
@@ -11,11 +12,13 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function normalizeConfig(config) {
-  const selectedDates = [...new Set(config.selectedDates || [])].sort();
+async function normalizeConfig(config) {
+  const requestedDates = await resolveDatesFromRequest(config);
+  const selectedDates = [...new Set(config.selectedDates?.length ? config.selectedDates : requestedDates?.dates || [])].sort();
   return {
     url: config.url || ZMP_URL,
     selectedDates,
+    requestedDates,
     hours: Number(config.hours || 8),
     workDescription: config.workDescription || "日常维护支持",
     category: config.category || DEFAULT_CATEGORY,
@@ -54,9 +57,12 @@ function dateInRange(date, range) {
   return date >= range.start && date <= range.end;
 }
 
-function buildPlan(config) {
-  const normalized = normalizeConfig(config);
+function buildPlanFromNormalized(config, normalized) {
   const dates = normalized.selectedDates;
+  const requestNote = normalized.requestedDates
+    ? `已按请求识别 ${normalized.requestedDates.month} 月截至 ${normalized.requestedDates.through} 的中国工作日，节假日数据来源：${normalized.requestedDates.holidayDataSource}。`
+    : null;
+  const requestWarning = normalized.requestedDates?.warning || null;
 
   return {
     url: normalized.url,
@@ -68,15 +74,24 @@ function buildPlan(config) {
     dryRun: normalized.dryRun,
     loginWaitMs: normalized.loginWaitMs,
     stepWaitMs: normalized.stepWaitMs,
+    requestText: config.requestText || config.text || config.prompt || "",
+    dateSource: normalized.requestedDates?.source || "selectedDates",
     dates,
     totalHours: dates.length * normalized.hours,
     notes: [
+      requestNote,
+      requestWarning,
       "进入 ZMP 后如出现“一键登录”，先点击并等待飞连登录完成。",
       "进入工作台后搜索“项目任务管理”，直接进入工时单填报页面。",
       "确认查询状态为“待我处理的”，必要时调整后查询。",
       "逐张工时单按标题日期范围填写任务工时。"
-    ]
+    ].filter(Boolean)
   };
+}
+
+async function buildPlan(config) {
+  const normalized = await normalizeConfig(config);
+  return buildPlanFromNormalized(config, normalized);
 }
 
 async function requirePlaywright() {
@@ -466,8 +481,8 @@ async function submitSheet(page, log) {
 }
 
 async function runZmpAutomation(rawConfig, log = () => {}) {
-  const config = normalizeConfig(rawConfig);
-  const plan = buildPlan(config);
+  const config = await normalizeConfig(rawConfig);
+  const plan = buildPlanFromNormalized(rawConfig, config);
   const result = {
     plan,
     filled: [],
