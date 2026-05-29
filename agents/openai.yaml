@@ -1,4 +1,4 @@
 interface:
   display_name: "XLS ZMP Timesheet Filler"
-  short_description: "Build and tune XLS ZMP timesheet automation."
-  default_prompt: "Use $xls-zmp-timesheet-filler to create or adjust the ZMP automatic timesheet filling tool, including current-month workday filling."
+  short_description: "Operate and tune XLS ZMP timesheet automation."
+  default_prompt: "Use $xls-zmp-timesheet-filler to fill or adjust ZMP timesheets with the bundled local tool, including current-month workday filling."

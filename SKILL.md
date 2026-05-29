@@ -5,11 +5,11 @@ description: Build, install, modify, troubleshoot, or operate a local browser au
 
 # XLS ZMP Timesheet Filler
 
-Use this skill to create, tune, or operate a local ZMP timesheet filling tool. The skill includes a working template at `assets/template/`.
+Use this skill to operate or tune the bundled local ZMP timesheet filling tool. The runnable app lives directly in this skill directory; do not copy files into the user's workspace for normal use.
 
-## Template
+## Bundled Tool
 
-Copy `assets/template/` into the user's chosen workspace when creating a new tool. The template contains:
+Run commands from the skill directory `~/.codex/skills/xls-zmp-timesheet-filler` unless the user is explicitly developing a separate copy. The tool contains:
 
 - `server.js`: local HTTP server and job runner.
 - `public/`: date-selection UI, execution logs, and settings.
@@ -19,7 +19,7 @@ Copy `assets/template/` into the user's chosen workspace when creating a new too
 - `scripts/verify-holiday-api.js`: API/plan smoke test for holiday data.
 - `package.json`: Node dependencies and scripts.
 
-Do not copy `node_modules` or `.cache`. Run `npm install` in the target workspace after copying.
+If dependencies are missing, run `npm install` once in the skill directory. Do not copy `node_modules` or `.cache`.
 
 ## Two Operating Modes
 
