@@ -7,6 +7,23 @@ const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.HOST || "127.0.0.1";
 const PUBLIC_DIR = path.join(__dirname, "public");
 const jobs = new Map();
+let shutdownScheduled = false;
+
+function scheduleServerShutdown(reason) {
+  if (shutdownScheduled) return;
+  shutdownScheduled = true;
+  console.log(`ZMP timesheet agent will close ${HOST}:${PORT} after job ${reason}.`);
+  setTimeout(() => {
+    server.close(() => {
+      console.log(`ZMP timesheet agent closed ${HOST}:${PORT}.`);
+    });
+    setTimeout(() => {
+      if (typeof server.closeAllConnections === "function") {
+        server.closeAllConnections();
+      }
+    }, 2000).unref();
+  }, 5000).unref();
+}
 
 function sendJson(res, status, payload) {
   const body = JSON.stringify(payload);
@@ -87,12 +104,14 @@ function createJob(config) {
       job.status = "completed";
       job.result = result;
       job.finishedAt = new Date().toISOString();
+      scheduleServerShutdown("completed");
     })
     .catch(error => {
       job.status = "failed";
       job.error = error.stack || error.message || String(error);
       job.finishedAt = new Date().toISOString();
       log(`失败：${error.message || error}`);
+      scheduleServerShutdown("failed");
     });
 
   return job;

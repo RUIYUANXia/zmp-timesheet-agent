@@ -139,6 +139,8 @@ Prefer these selectors and behaviors before inventing new ones:
 - Existing-date detection must be scoped to the `任务工时` table only. Do not scan the whole page, because work-order due dates can cause false `已存在` skips.
 - Save after every date entry, then add the next date.
 - Submission is fixed on: submit the current work order after it has received the number of dates computed from `总工时 / dailyHours`.
+- Each job should attempt browser automation only once. Do not retry automatically after login, navigation, selector, or fill failures.
+- After a job completes or fails, close the local HTTP server and release its port. Leave only a short delay for the CLI/frontend to read the final result.
 - Conversational mode should show a generated plan before execution, but execution defaults to real fill and auto-submit once the user confirms.
 - Do not create persistent config JSON files in the workspace for conversational runs. Use inline JSON, stdin, or an ephemeral temp file only if shell quoting makes inline JSON impractical.
 
