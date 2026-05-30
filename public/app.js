@@ -2,10 +2,12 @@ const calendar = document.querySelector("#calendar");
 const monthLabel = document.querySelector("#monthLabel");
 const output = document.querySelector("#output");
 const statusEl = document.querySelector("#status");
+const categorySelect = document.querySelector("#category");
 const selected = new Set();
 
 let cursor = new Date();
 cursor.setDate(1);
+categorySelect.selectedIndex = -1;
 
 function iso(date) {
   const y = date.getFullYear();
@@ -61,7 +63,7 @@ function collectConfig() {
     requestText: document.querySelector("#requestText").value.trim(),
     selectedDates: [...selected].sort(),
     hours: Number(document.querySelector("#hours").value || 8),
-    category: document.querySelector("#category").value,
+    category: categorySelect.value,
     workDescription: document.querySelector("#workDescription").value.trim(),
     isTravel: document.querySelector("#isTravel").checked,
     loginWaitMs: Number(document.querySelector("#loginWaitSeconds").value || 12) * 1000,

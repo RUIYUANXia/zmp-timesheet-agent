@@ -38,9 +38,9 @@ Ask only for missing information:
 - 日期：explicit dates or a date range. If the user gives a range, ask whether to include every date in the range or exclude any rest days. Do not infer weekends.
 - 本月工时：if the user says “帮我填写本月工时” or equivalent, set `requestText` instead of manually enumerating dates. The tool resolves current month-to-date China workdays from the holiday API, then allocates dates across work orders by each dialog's `总工时`.
 - 每天工时：default to `8` only if the user accepts the default.
-- 工时类型：must be exactly one of these 10 labels and no other values:
+- 工时类型：required. There is no default 工时类型. It must be exactly one of these 10 complete labels and no other values:
   `服务台/监控`, `投诉/问题排查&处理`, `升级/测试/业务操作`, `培训`, `部署/配置`, `日常维护/数据治理`, `故障/软硬件BUG处理`, `需求调研`, `管理和沟通`, `割接对账`.
-  Do not invent, translate, abbreviate, normalize, or map synonyms for 工时类型. If the user provides a type outside this list, ask them to choose one of these 10 labels before execution. When building JSON, `category` must be copied verbatim from this list.
+  The `/` characters are part of the label text, not separators. For example, `升级/测试/业务操作` is one complete label, not three choices. Do not invent, translate, abbreviate, normalize, split, or map synonyms for 工时类型. Do not offer `其他`. If the user provides a type outside this list, ask them to choose one of these 10 full labels before execution. When building JSON, `category` must be copied verbatim from this list.
 - 工作说明：ask if not provided.
 - 是否出差：ask if not provided.
 
@@ -109,7 +109,7 @@ Implement and preserve this ZMP flow unless the user gives newer screenshots or 
 8. Fill that many dates from the pending-date list, one row at a time:
    - click the dialog's inner `新增`,
    - find `工时日期`, directly fill `YYYY-MM-DD` when possible; if the picker opens, select the day from `.datetimepicker.datetimepicker-dropdown.dropdown-menu`,
-   - find the configured hour field such as `升级/测试/业务操作` and fill the daily hours,
+   - find the configured hour field using the chosen complete 工时类型 label and fill the daily hours,
    - find 工作说明 and fill it,
    - click 保存 immediately for that date.
 9. Always click 提交 after this work order has received the number of dates computed from `总工时`. Then move to the next distinct 工单号 and continue with the remaining dates.

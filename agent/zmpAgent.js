@@ -3,7 +3,6 @@ const path = require("path");
 const { resolveDatesFromRequest } = require("./workCalendar");
 
 const ZMP_URL = "https://zmp.iwhalecloud.com/newZmp#/";
-const DEFAULT_CATEGORY = "升级/测试/业务操作";
 const VALID_CATEGORIES = [
   "服务台/监控",
   "投诉/问题排查&处理",
@@ -27,7 +26,10 @@ function formatDate(date) {
 async function normalizeConfig(config) {
   const requestedDates = await resolveDatesFromRequest(config);
   const selectedDates = [...new Set(config.selectedDates?.length ? config.selectedDates : requestedDates?.dates || [])].sort();
-  const category = config.category || DEFAULT_CATEGORY;
+  const category = config.category;
+  if (!category) {
+    throw new Error(`必须选择工时类型，且只能是：${VALID_CATEGORIES.join("、")}`);
+  }
   if (!VALID_CATEGORIES.includes(category)) {
     throw new Error(`工时类型只能是：${VALID_CATEGORIES.join("、")}。当前值：${category}`);
   }
