@@ -38,8 +38,9 @@ Ask only for missing information:
 - 日期：explicit dates or a date range. If the user gives a range, ask whether to include every date in the range or exclude any rest days. Do not infer weekends.
 - 本月工时：if the user says “帮我填写本月工时” or equivalent, set `requestText` instead of manually enumerating dates. The tool resolves current month-to-date China workdays from the holiday API, then allocates dates across work orders by each dialog's `总工时`.
 - 每天工时：default to `8` only if the user accepts the default.
-- 工时类型：must be exactly one of these ZMP labels:
+- 工时类型：must be exactly one of these 10 labels and no other values:
   `服务台/监控`, `投诉/问题排查&处理`, `升级/测试/业务操作`, `培训`, `部署/配置`, `日常维护/数据治理`, `故障/软硬件BUG处理`, `需求调研`, `管理和沟通`, `割接对账`.
+  Do not invent, translate, abbreviate, normalize, or map synonyms for 工时类型. If the user provides a type outside this list, ask them to choose one of these 10 labels before execution. When building JSON, `category` must be copied verbatim from this list.
 - 工作说明：ask if not provided.
 - 是否出差：ask if not provided.
 
